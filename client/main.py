@@ -19,10 +19,11 @@
 ##########################################################################
 """
 
-import click
-from base64 import b64decode, b64encode
-from urllib3 import PoolManager
 import json
+from base64 import b64decode, b64encode
+
+import click
+from urllib3 import PoolManager
 
 
 def filesend(servloca, attrdata):
@@ -62,26 +63,6 @@ def filerecv(servloca, attrdata):
     :param attrdata:
     :return:
     """
-    httpobjc = PoolManager()
-    rgetfild = {
-        "tokniden": attrdata
-    }
-    rqstobjc = httpobjc.request("GET", servloca + "filerecv", fields=rgetfild)
-    respdata = json.loads(rqstobjc.data.decode())
-    if respdata["retnmesg"] == "FAIL":
-        click.echo(
-            click.style("Transfer failed!", fg="red")
-        )
-    elif respdata["retnmesg"] == "DONE":
-        filename = respdata["filename"]
-        b64etext = respdata["contents"]
-        contents = b64decode(b64etext.encode()).decode()
-        with open(filename, "w") as fileobjc:
-            fileobjc.write(contents)
-        click.echo(
-            click.style("Transfer successful!", fg="green")
-        )
-    """
     try:
         httpobjc = PoolManager()
         rgetfild = {
@@ -93,14 +74,17 @@ def filerecv(servloca, attrdata):
             click.echo(
                 click.style("Transfer failed!", fg="red")
             )
-        else:
+        elif respdata["retnmesg"] == "DONE":
             filename = respdata["filename"]
             b64etext = respdata["contents"]
             contents = b64decode(b64etext.encode()).decode()
-            print(contents)
+            with open(filename, "w") as fileobjc:
+                fileobjc.write(contents)
+            click.echo(
+                click.style("Transfer successful!", fg="green")
+            )
     except Exception as expt:
         click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))
-    """
 
 
 @click.command()
@@ -136,6 +120,8 @@ def filerecv(servloca, attrdata):
 )
 def mainfunc(servloca, attrdata, opertion):
     """
+    A reliable API service to ensure that the publication reaches you in a true and untainted manner.
+    """
     try:
         click.echo(
             click.style(
@@ -148,16 +134,6 @@ def mainfunc(servloca, attrdata, opertion):
             filerecv(servloca, attrdata)
     except Exception as expt:
         click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))
-    """
-    click.echo(
-        click.style(
-            "Veritas Client v0.1.0-alpha", bold=True
-        )
-    )
-    if opertion == "filesend":
-        filesend(servloca, attrdata)
-    elif opertion == "filerecv":
-        filerecv(servloca, attrdata)
 
 
 if __name__ == "__main__":

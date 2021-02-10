@@ -109,6 +109,9 @@ class FileReceptionEndpoint(object):
     prog_name=click.style("Veritas Server", fg="magenta")
 )
 def mainfunc(portdata, netprotc):
+    """
+    A reliable API service to ensure that the publication reaches you in a true and untainted manner.
+    """
     try:
         click.echo(
             click.style(
