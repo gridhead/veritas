@@ -21,8 +21,10 @@
 
 import json
 from base64 import b64decode, b64encode
+from os.path import basename
 
 import click
+from tqdm import tqdm
 from urllib3 import PoolManager
 
 
@@ -34,26 +36,31 @@ def filesend(servloca, attrdata):
     :return:
     """
     try:
+        httpobjc = PoolManager()
         with open(attrdata, "r") as fileobjc:
             contents = fileobjc.read()
         b64etext = b64encode(contents.encode()).decode()
         rgetfild = {
-            "filename": attrdata,
+            "filename": basename(attrdata),
             "contents": b64etext
         }
-        httpobjc = PoolManager()
-        rqstobjc = httpobjc.request("GET", servloca + "filesend", fields=rgetfild)
-        respdata = json.loads(rqstobjc.data.decode())
+        rqstobjc = httpobjc.request("GET", servloca + "filesend", fields=rgetfild, preload_content=False)
+        respdata = ""
+        progelem = tqdm(rqstobjc.stream())
+        for filepeic in progelem:
+            respdata += filepeic.decode()
+            progelem.set_description(click.style("Sending", fg="green"))
+        respdata = json.loads(respdata)
         if respdata["retnmesg"] == "FAIL":
             click.echo(
-                click.style("Transfer failed!", fg="red")
+                click.style("Transfer failed", fg="red", bold=True)
             )
         elif respdata["retnmesg"] == "DONE":
             click.echo(
-                click.style("Store this token safely -> " + respdata["tokniden"], fg="green")
+                click.style(respdata["tokniden"], fg="green", bold=True)
             )
     except Exception as expt:
-        click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))
+        click.echo(click.style(str(expt), fg="red"))
 
 
 def filerecv(servloca, attrdata):
@@ -68,11 +75,16 @@ def filerecv(servloca, attrdata):
         rgetfild = {
             "tokniden": attrdata
         }
-        rqstobjc = httpobjc.request("GET", servloca + "filerecv", fields=rgetfild)
-        respdata = json.loads(rqstobjc.data.decode())
+        rqstobjc = httpobjc.request("GET", servloca + "filerecv", fields=rgetfild, preload_content=False)
+        respdata = ""
+        progelem = tqdm(rqstobjc.stream(2))
+        for filepeic in progelem:
+            respdata += filepeic.decode()
+            progelem.set_description(click.style("Receiving", fg="green"))
+        respdata = json.loads(respdata)
         if respdata["retnmesg"] == "FAIL":
             click.echo(
-                click.style("Transfer failed!", fg="red")
+                click.style("Transfer failed", fg="red", bold=True)
             )
         elif respdata["retnmesg"] == "DONE":
             filename = respdata["filename"]
@@ -81,10 +93,10 @@ def filerecv(servloca, attrdata):
             with open(filename, "w") as fileobjc:
                 fileobjc.write(contents)
             click.echo(
-                click.style("Transfer successful!", fg="green")
+                click.style("Transfer successful", fg="green", bold=True)
             )
     except Exception as expt:
-        click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))
+        click.echo(click.style(str(expt), fg="red"))
 
 
 @click.command()
@@ -133,7 +145,7 @@ def mainfunc(servloca, attrdata, opertion):
         elif opertion == "filerecv":
             filerecv(servloca, attrdata)
     except Exception as expt:
-        click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))
+        click.echo(click.style(str(expt), fg="red"))
 
 
 if __name__ == "__main__":

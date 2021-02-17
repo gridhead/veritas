@@ -63,7 +63,6 @@ class FileReceptionEndpoint(object):
     def on_get(self, rqst, resp):
         try:
             tokniden = rqst.get_param("tokniden")
-            jsoncont = {}
             with open("../arcade/" + tokniden + ".json", "r") as fileobjc:
                 jsoncont = fileobjc.read()
             jsoncont = json.loads(jsoncont)
