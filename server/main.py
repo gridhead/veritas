@@ -21,6 +21,7 @@
 
 import json
 from hashlib import sha256
+import logging
 from time import time
 
 import click
@@ -31,6 +32,8 @@ from werkzeug import serving
 
 
 main = falcon.API()
+loge = logging.getLogger("werkzeug")
+loge.setLevel(logging.ERROR)
 
 
 class FileDispersalEndpoint(object):
@@ -42,9 +45,18 @@ class FileDispersalEndpoint(object):
                 "filename": filename,
                 "contents": contents,
             }
-            conthxdc = sha256((contents + str(time())).encode()).hexdigest()
-            with open("../arcade/" + conthxdc + ".json", "w") as fileobjc:
+            timestmp = str(time())
+            conthxdc = sha256((contents + timestmp).encode()).hexdigest()
+            with open("arcade/" + conthxdc + ".json", "w") as fileobjc:
                 json.dump(jsoncont, fileobjc)
+            with open("arcade/contledg.json", "r") as ledgread:
+                jsonledg = json.loads(ledgread.read())
+            with open("arcade/contledg.json", "w") as ledgmode:
+                jsonledg[conthxdc] = {
+                    "timestmp": timestmp,
+                    "hxdciden": conthxdc
+                }
+                json.dump(jsonledg, ledgmode)
             retnjson = {
                 "retnmesg": "DONE",
                 "tokniden": conthxdc
@@ -64,14 +76,22 @@ class FileReceptionEndpoint(object):
         try:
             tokniden = rqst.get_param("tokniden")
             jsoncont = {}
-            with open("../arcade/" + tokniden + ".json", "r") as fileobjc:
-                jsoncont = fileobjc.read()
-            jsoncont = json.loads(jsoncont)
-            retnjson = {
-                "retnmesg": "DONE",
-                "filename": jsoncont["filename"],
-                "contents": jsoncont["contents"]
-            }
+            with open("arcade/contledg.json", "r") as ledgread:
+                jsonledg = json.loads(ledgread.read())
+            if tokniden in jsonledg.keys():
+                with open("arcade/" + tokniden + ".json", "r") as fileobjc:
+                    jsoncont = fileobjc.read()
+                jsoncont = json.loads(jsoncont)
+                retnjson = {
+                    "retnmesg": "DONE",
+                    "filename": jsoncont["filename"],
+                    "contents": jsoncont["contents"]
+                }
+            else:
+                print(expt)
+                retnjson = {
+                    "retnmesg": "FAIL"
+                }
         except Exception as expt:
             print(expt)
             retnjson = {

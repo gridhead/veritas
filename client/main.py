@@ -21,6 +21,7 @@
 
 import json
 from base64 import b64decode, b64encode
+from sys import exit
 
 import click
 from urllib3 import PoolManager
@@ -34,26 +35,31 @@ def filesend(servloca, attrdata):
     :return:
     """
     try:
-        with open(attrdata, "r") as fileobjc:
+        with open(attrdata, "rb") as fileobjc:
             contents = fileobjc.read()
-        b64etext = b64encode(contents.encode()).decode()
-        rgetfild = {
-            "filename": attrdata,
-            "contents": b64etext
-        }
-        httpobjc = PoolManager()
-        rqstobjc = httpobjc.request("GET", servloca + "filesend", fields=rgetfild)
-        respdata = json.loads(rqstobjc.data.decode())
-        if respdata["retnmesg"] == "FAIL":
-            click.echo(
-                click.style("Transfer failed!", fg="red")
-            )
-        elif respdata["retnmesg"] == "DONE":
-            click.echo(
-                click.style("Store this token safely -> " + respdata["tokniden"], fg="green")
-            )
+        if len(contents) <= 8388608:
+            b64etext = b64encode(contents).decode()
+            rgetfild = {
+                "filename": attrdata,
+                "contents": b64etext
+            }
+            httpobjc = PoolManager()
+            rqstobjc = httpobjc.request("GET", servloca + "filesend", fields=rgetfild)
+            respdata = json.loads(rqstobjc.data.decode())
+            if respdata["retnmesg"] == "FAIL":
+                click.echo(
+                    click.style("Transfer failed!", fg="red")
+                )
+            elif respdata["retnmesg"] == "DONE":
+                click.echo(
+                    click.style("Store this token safely -> " + respdata["tokniden"], fg="green")
+                )
+        else:
+            click.echo(click.style("Error occured -> File needs to be under 8MB of size", fg="red"))
+            exit()
     except Exception as expt:
-        click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))
+        click.echo(click.style("Error occurred -> " + str(expt), fg="red"))
+        exit()
 
 
 def filerecv(servloca, attrdata):
@@ -77,14 +83,15 @@ def filerecv(servloca, attrdata):
         elif respdata["retnmesg"] == "DONE":
             filename = respdata["filename"]
             b64etext = respdata["contents"]
-            contents = b64decode(b64etext.encode()).decode()
-            with open(filename, "w") as fileobjc:
+            contents = b64etext.encode()
+            with open(filename, "wb") as fileobjc:
                 fileobjc.write(contents)
             click.echo(
                 click.style("Transfer successful!", fg="green")
             )
     except Exception as expt:
-        click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))
+        click.echo(click.style("Error occurred -> " + str(expt), fg="red"))
+        exit()
 
 
 @click.command()
@@ -133,7 +140,8 @@ def mainfunc(servloca, attrdata, opertion):
         elif opertion == "filerecv":
             filerecv(servloca, attrdata)
     except Exception as expt:
-        click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))
+        click.echo(click.style("Error occurred -> " + str(expt), fg="red"))
+        exit()
 
 
 if __name__ == "__main__":
