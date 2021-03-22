@@ -102,6 +102,25 @@ class FileReceptionEndpoint(object):
         resp.status = falcon.HTTP_200
 
 
+class LedgerReceptionEndpoint(object):
+    def on_get(self, rqst, resp):
+        try:
+            with open("arcade/contledg.json", "r") as ledgread:
+                jsonledg = json.loads(ledgread.read())
+            retnjson = {
+                "retnmesg": "DONE",
+                "jsonledg": jsonledg
+            }
+        except Exception as expt:
+            print(expt)
+            retnjson = {
+                "retnmesg": "FAIL"
+            }
+        resp.body = json.dumps(retnjson, ensure_ascii=False)
+        resp.set_header("Access-Control-Allow-Origin", "*")
+        resp.status = falcon.HTTP_200
+
+
 @click.command()
 @click.option(
     "-p",
@@ -153,8 +172,10 @@ def mainfunc(portdata, netprotc):
         )
         filesend = FileDispersalEndpoint()
         filerecv = FileReceptionEndpoint()
+        ledgrecv = LedgerReceptionEndpoint()
         main.add_route("/filesend", filesend)
         main.add_route("/filerecv", filerecv)
+        main.add_route("/ledgrecv", ledgrecv)
         serving.run_simple(netpdata, int(portdata), main)
     except Exception as expt:
         click.echo(" * " + click.style("Error occurred    : " + str(expt), fg="red"))

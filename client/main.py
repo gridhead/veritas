@@ -94,6 +94,29 @@ def filerecv(servloca, attrdata):
         exit()
 
 
+def legdread(servloca):
+    """
+    Receives a manifest of files shared in the network
+    """
+    try:
+        httpobjc = PoolManager()
+        rqstobjc = httpobjc.request("GET", servloca + "ledgrecv")
+        respdata = json.loads(rqstobjc.data.decode())
+        if respdata["retnmesg"] == "FAIL":
+            click.echo(
+                click.style("Acquisition failed!", fg="red")
+            )
+        elif respdata["retnmesg"] == "DONE":
+            jsonledg = respdata["jsonledg"]
+            print(json.dumps(jsonledg, indent = 2))
+            click.echo(
+                click.style("Acquisition successful!", fg="green")
+            )
+    except Exception as expt:
+        click.echo(click.style("Error occurred -> " + str(expt), fg="red"))
+        exit()
+
+
 @click.command()
 @click.option(
     "-l",
@@ -121,6 +144,13 @@ def filerecv(servloca, attrdata):
     flag_value="filerecv",
     help="Initiate file reception."
 )
+@click.option(
+    "-o",
+    "--ledgread",
+    "opertion",
+    flag_value="ledgread",
+    help="Acquire ledger from remote."
+)
 @click.version_option(
     version="0.1.0-alpha",
     prog_name=click.style("Veritas Client", fg="magenta")
@@ -139,6 +169,8 @@ def mainfunc(servloca, attrdata, opertion):
             filesend(servloca, attrdata)
         elif opertion == "filerecv":
             filerecv(servloca, attrdata)
+        elif opertion == "ledgread":
+            legdread(servloca)
     except Exception as expt:
         click.echo(click.style("Error occurred -> " + str(expt), fg="red"))
         exit()
