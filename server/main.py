@@ -54,7 +54,7 @@ class FileDispersalEndpoint(object):
             with open("arcade/contledg.json", "w") as ledgmode:
                 jsonledg[conthxdc] = {
                     "timestmp": timestmp,
-                    "hxdciden": conthxdc
+                    "contents": contents
                 }
                 json.dump(jsonledg, ledgmode)
             retnjson = {

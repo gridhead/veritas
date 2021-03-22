@@ -83,7 +83,7 @@ def filerecv(servloca, attrdata):
         elif respdata["retnmesg"] == "DONE":
             filename = respdata["filename"]
             b64etext = respdata["contents"]
-            contents = b64etext.encode()
+            contents = b64decode(b64etext)
             with open(filename, "wb") as fileobjc:
                 fileobjc.write(contents)
             click.echo(
