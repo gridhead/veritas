@@ -22,6 +22,7 @@
 import json
 from base64 import b64decode, b64encode
 from sys import exit
+from time import time
 
 import click
 from urllib3 import PoolManager
@@ -43,9 +44,11 @@ def filesend(servloca, attrdata):
                 "filename": attrdata,
                 "contents": b64etext
             }
+            strttime = time()
             httpobjc = PoolManager()
             rqstobjc = httpobjc.request("GET", servloca + "filesend", fields=rgetfild)
             respdata = json.loads(rqstobjc.data.decode())
+            stoptime = time()
             if respdata["retnmesg"] == "FAIL":
                 click.echo(
                     click.style("Transfer failed!", fg="red")
@@ -54,6 +57,9 @@ def filesend(servloca, attrdata):
                 click.echo(
                     click.style("Store this token safely -> " + respdata["tokniden"], fg="green")
                 )
+            click.echo(
+                "Finished in " + str(round(stoptime-strttime,2)) + " seconds"
+            )
         else:
             click.echo(click.style("Error occured -> File needs to be under 8MB of size", fg="red"))
             exit()
@@ -70,12 +76,14 @@ def filerecv(servloca, attrdata):
     :return:
     """
     try:
+        strttime = time()
         httpobjc = PoolManager()
         rgetfild = {
             "tokniden": attrdata
         }
         rqstobjc = httpobjc.request("GET", servloca + "filerecv", fields=rgetfild)
         respdata = json.loads(rqstobjc.data.decode())
+        stoptime = time()
         if respdata["retnmesg"] == "FAIL":
             click.echo(
                 click.style("Transfer failed!", fg="red")
@@ -89,6 +97,9 @@ def filerecv(servloca, attrdata):
             click.echo(
                 click.style("Transfer successful!", fg="green")
             )
+        click.echo(
+            "Finished in " + str(round(stoptime-strttime,2)) + " seconds"
+        )
     except Exception as expt:
         click.echo(click.style("Error occurred -> " + str(expt), fg="red"))
         exit()
@@ -99,9 +110,11 @@ def legdread(servloca):
     Receives a manifest of files shared in the network
     """
     try:
+        strttime = time()
         httpobjc = PoolManager()
         rqstobjc = httpobjc.request("GET", servloca + "ledgrecv")
         respdata = json.loads(rqstobjc.data.decode())
+        stoptime = time()
         if respdata["retnmesg"] == "FAIL":
             click.echo(
                 click.style("Acquisition failed!", fg="red")
@@ -112,6 +125,9 @@ def legdread(servloca):
             click.echo(
                 click.style("Acquisition successful!", fg="green")
             )
+        click.echo(
+            "Finished in " + str(round(stoptime-strttime,2)) + " seconds"
+        )
     except Exception as expt:
         click.echo(click.style("Error occurred -> " + str(expt), fg="red"))
         exit()
@@ -171,6 +187,10 @@ def mainfunc(servloca, attrdata, opertion):
             filerecv(servloca, attrdata)
         elif opertion == "ledgread":
             legdread(servloca)
+        else:
+            click.echo(
+                click.style("No operation requested", fg="red")
+            )
     except Exception as expt:
         click.echo(click.style("Error occurred -> " + str(expt), fg="red"))
         exit()
