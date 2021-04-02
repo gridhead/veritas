@@ -53,8 +53,7 @@ class FileDispersalEndpoint(object):
                 jsonledg = json.loads(ledgread.read())
             with open("arcade/contledg.json", "w") as ledgmode:
                 jsonledg[conthxdc] = {
-                    "timestmp": timestmp,
-                    "contents": contents
+                    "timestmp": timestmp
                 }
                 json.dump(jsonledg, ledgmode)
             retnjson = {
@@ -88,7 +87,6 @@ class FileReceptionEndpoint(object):
                     "contents": jsoncont["contents"]
                 }
             else:
-                print(expt)
                 retnjson = {
                     "retnmesg": "FAIL"
                 }
