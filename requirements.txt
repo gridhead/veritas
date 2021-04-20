@@ -1,0 +1,4 @@
+click==7.1.2
+falcon==2.0.0
+urllib3==1.26.4
+Werkzeug==1.0.1
